@@ -1,0 +1,230 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Este documento estabelece as melhores práticas para desenvolver aplicações Next.js, com foco na organização de código, otimização de desempenho, segurança, estratégias de teste e armadilhas comuns a evitar. A adesão a estas diretrizes ajudará a construir aplicações robustas, escaláveis e de fácil manutenção.
+globs: **/*.{js,jsx,ts,tsx}
+---
+# Diretrizes de Desenvolvimento Next.js
+
+Este documento estabelece as melhores práticas para desenvolver aplicações Next.js, com foco na organização de código, otimização de desempenho, segurança, estratégias de teste e armadilhas comuns a evitar. A adesão a estas diretrizes ajudará a construir aplicações robustas, escaláveis e de fácil manutenção.
+
+## 1. Organização e Estrutura de Código
+
+### Estrutura de Diretórios
+
+*   **`app/`**: Contém manipuladores de rotas, componentes de servidor e cliente.
+    *   `page.tsx`: Representa a UI para uma rota.
+    *   `layout.tsx`: Define o layout para uma rota e seus filhos.
+    *   `loading.tsx`: Exibe uma UI de carregamento enquanto um segmento de rota está carregando.
+    *   `error.tsx`: Manipula erros dentro de um segmento de rota.
+    *   `route.ts`: Define manipuladores de rota do lado do servidor (rotas de API).
+    *   `[dynamic-segment]`: Segmentos de rota dinâmicos, usando colchetes.
+    *   `(auth)/`: Grupo de rotas para autenticação (usando parênteses para agrupamento lógico).
+    *   `(dashboard)/`: Grupo de rotas para o dashboard.
+*   **`components/`**: Componentes UI reutilizáveis.
+    *   `ui/`: Componentes UI do Shadcn.
+    *   `forms/`: Componentes relacionados a formulários.
+    *   `[feature-components]/`: Componentes específicos para cada feature.
+*   **`lib/`**: Funções utilitárias, funções auxiliares e integrações de terceiros.
+*   **`hooks/`**: Hooks React personalizados.
+*   **`styles/`**: Estilos globais e módulos CSS.
+*   **`public/`**: Ativos estáticos (imagens, fontes, etc.).
+*   **`types/`**: Definições de tipos e interfaces TypeScript.
+*   **`config/`**: Arquivos de configuração da aplicação.
+*   **`providers/`**: Providers de contexto React.
+*   **`.docia/`**: Documentação do projeto.
+    *   `state.md`: Estado atual do projeto e progresso.
+    *   `commands.md`: Lista de comandos disponíveis para interação.
+    *   `structure.md`: Estrutura detalhada de pastas do projeto.
+    *   `features/`: Pasta para features do sistema.
+    *   `project/`: Documentação geral do projeto.
+
+### Convenções de Nomenclatura
+
+*   **Componentes:** `PascalCase.tsx` (ex: `Button.tsx`)
+*   **Páginas:** `page.tsx` (dentro do diretório `app`)
+*   **Layouts:** `layout.tsx` (dentro do diretório `app`)
+*   **Rotas API:** `route.ts` (dentro do diretório `app/api`)
+*   **Hooks:** Prefixados com `use` e em camelCase (ex: `useAuthState.ts`)
+*   **Páginas e Rotas:** Use kebab-case para diretórios de rotas (ex: `user-profile/`)
+*   **Arquivos TypeScript:** Use camelCase (ex: `authUtils.ts`)
+*   **Tarefas:** Formato `[number]-[task-name]`
+*   **Estilos:** `ComponentName.module.css` ou `ComponentName.module.scss`
+
+### Organização de Módulos
+
+*   **Co-localização:** Mantenha componentes, estilos e testes relacionados no mesmo diretório.
+*   **Módulos baseados em recursos:** Agrupe arquivos por recurso em vez de tipo.
+*   **Evite diretórios profundamente aninhados:** Mantenha a estrutura de diretórios relativamente plana para melhorar a navegação.
+
+### Arquitetura de Componentes
+
+*   **Componentes de Apresentação vs. Contêiner:** Separe componentes que lidam com busca de dados e gerenciamento de estado (componentes de contêiner) daqueles que apenas renderizam UI (componentes de apresentação).
+*   **Design Atômico:** Organize componentes em átomos, moléculas, organismos, templates e páginas para melhor reutilização e manutenção.
+*   **Composição em vez de herança:** Favoreça a composição para criar componentes flexíveis e reutilizáveis.
+*   **Componentes de Servidor (diretório app):** Use componentes de servidor por padrão para melhor desempenho. Use componentes de cliente apenas quando a interatividade (manipuladores de eventos, useState, useEffect) for necessária.
+
+## 2. Padrões Comuns e Anti-padrões
+
+### Padrões de Design
+
+*   **Componentes de Ordem Superior (HOCs):** Lógica de componente reutilizável.
+*   **Render Props:** Compartilhamento de código entre componentes React usando uma prop cujo valor é uma função.
+*   **Hooks:** Extraindo lógica com estado em funções reutilizáveis.
+*   **API de Contexto:** Gerenciando estado global.
+*   **Componentes Compostos:** Combinando múltiplos componentes que trabalham juntos implicitamente.
+
+### Abordagens Recomendadas
+
+*   **Busca de dados:** Use Server Components para buscar dados no lado do servidor. Use `SWR` ou `React Query` para busca de dados e cache no lado do cliente.
+*   **Estilização:** Use Tailwind CSS para estilização em nível de componente. Componentes Shadcn UI para interface consistente.
+*   **Gerenciamento de Estado:** Use Zustand para gerenciar estado global. React Context para estado simples compartilhado.
+*   **Manipulação de Formulários:** Use `react-hook-form` com Zod para gerenciar formulários e validação.
+*   **Rotas API:** Use rotas API Next.js para funções serverless.
+
+### Anti-padrões e Code Smells
+
+*   **Over-fetching de dados:** Busque apenas os dados necessários para o componente.
+*   **Bloqueando a thread principal:** Evite operações síncronas de longa duração na thread principal.
+*   **Mutando estado diretamente:** Sempre use `setState` ou hooks para atualizar estado.
+*   **Não memoizando componentes:** Use `React.memo` para prevenir re-renderizações desnecessárias.
+*   **Usando `useEffect` sem um array de dependências:** Garanta que o array de dependências esteja completo para prevenir comportamento inesperado.
+*   **Escrevendo código do lado do servidor em componentes do cliente:** Pode expor segredos ou causar comportamento inesperado.
+
+## 3. Considerações de Desempenho
+
+### Técnicas de Otimização
+
+*   **Otimização de imagem:** Use o componente `next/image` para otimização automática de imagem.
+*   **Otimização de fonte:** Use `next/font` para otimizar o carregamento de fontes.
+*   **Divisão de código:** Use importações dinâmicas e divisão de código em nível de rota.
+*   **Cache:** Use estratégias de cache (e.g., SWR, React Query) para reduzir a sobrecarga de busca de dados.
+*   **SSR/SSG:** Use Geração de Site Estático (SSG) para conteúdo que não muda frequentemente e Renderização do Lado do Servidor (SSR) para conteúdo dinâmico.
+*   **Regeneração Estática Incremental (ISR):** Use ISR para atualizar páginas geradas estaticamente em um intervalo regular.
+
+### Gerenciamento de Memória
+
+*   **Evite vazamentos de memória:** Limpe event listeners e timers em hooks `useEffect`.
+*   **Minimize re-renderizações:** Apenas atualize o estado quando necessário para reduzir o número de re-renderizações.
+*   **Use estruturas de dados imutáveis:** Evite mutar dados diretamente para prevenir efeitos colaterais inesperados.
+
+## 4. Melhores Práticas de Segurança
+
+### Vulnerabilidades Comuns
+
+*   **Cross-Site Scripting (XSS):** Sanitize a entrada do usuário para prevenir ataques XSS.
+*   **Cross-Site Request Forgery (CSRF):** Use tokens CSRF para proteger contra ataques CSRF.
+*   **Injeção SQL:** Use consultas parametrizadas ou um ORM para prevenir ataques de injeção SQL.
+*   **Vulnerabilidades de Autenticação e Autorização:** Implemente mecanismos seguros de autenticação e autorização.
+*   **Expondo dados sensíveis:** Proteja chaves de API e outros dados sensíveis armazenando-os em variáveis de ambiente.
+
+### Validação de Entrada
+
+*   **Validação do lado do servidor:** Sempre valide a entrada do usuário no lado do servidor.
+*   **Validação do lado do cliente:** Use validação do lado do cliente para feedback imediato.
+*   **Use bibliotecas de validação:** Use Zod para validação de dados e tipar automaticamente.
+
+### Autenticação e Autorização
+
+*   **Use um provedor de autenticação seguro:** Use NextAuth.js/Auth.js para autenticação.
+*   **Armazene tokens de forma segura:** Armazene tokens em cookies HTTP-only.
+*   **Implemente controle de acesso baseado em função:** Use middleware para controle de acesso.
+
+## 5. Abordagens de Teste
+
+### Teste Unitário
+
+*   **Teste componentes individuais:** Use React Testing Library para testes unitários de componentes.
+*   **Mock dependências:** Mock dependências externas para isolar componentes durante o teste.
+*   **Teste casos de borda:** Teste casos de borda e condições de erro.
+
+### Teste de Integração
+
+*   **Teste interações entre componentes:** Escreva testes de integração para garantir que componentes estejam funcionando juntos corretamente.
+*   **Teste chamadas de API:** Use MSW para mockar chamadas de API durante testes.
+
+### Teste End-to-End
+
+*   **Teste a aplicação inteira:** Use Cypress ou Playwright para testes E2E.
+*   **Teste fluxos de usuário:** Teste fluxos comuns como autenticação, navegação, etc.
+*   **Foque em caminhos críticos:** Priorize testes end-to-end para fluxos de usuário críticos.
+
+## 6. Armadilhas e Pegadinhas Comuns
+
+### Erros Frequentes
+
+*   **Não entender renderização do lado do servidor:** Falha em utilizar SSR efetivamente.
+*   **Complicar demais o gerenciamento de estado:** Usar soluções complexas para problemas simples.
+*   **Não otimizar imagens:** Não usar `next/image` pode resultar em tamanhos grandes de imagem.
+*   **Ignorar melhores práticas de segurança:** Negligenciar segurança pode levar a vulnerabilidades.
+*   **Não testar a aplicação adequadamente:** Teste insuficiente pode resultar em bugs e regressões.
+*   **Expor acidentalmente chaves de API ou segredos em código do lado do cliente.**
+
+### Estratégias de Debugging
+
+*   **Use as ferramentas de desenvolvedor do navegador:** Para inspecionar o DOM, debugar JavaScript e analisar requisições de rede.
+*   **Use declarações console.log:** Para debugar código.
+*   **Use um debugger:** Para percorrer código e inspecionar variáveis.
+*   **Use registro de erro:** Registre erros em um serviço central para rastrear e analisar problemas.
+
+## 7. Ferramentas e Ambiente
+
+### Ferramentas de Desenvolvimento Recomendadas
+
+*   **VS Code:** Editor de código com excelente suporte para JavaScript, TypeScript e React.
+*   **ESLint:** Linter para identificar e corrigir problemas de estilo de código.
+*   **Prettier:** Formatador de código para formatar automaticamente código.
+*   **Chrome Developer Tools:** Ferramentas de desenvolvedor de navegador para debugar e perfilar.
+*   **React Developer Tools:** Extensão de navegador para inspecionar componentes React.
+
+### Configuração de Build
+
+*   **Use variáveis de ambiente:** Armazene valores de configuração em variáveis de ambiente.
+*   **Use um script de build:** Use um script de build para automatizar o processo de build.
+*   **Otimize configurações de build:** Otimize configurações de build para produção.
+
+### Implantação
+
+*   **Use Vercel para implantação fácil:** Vercel é a plataforma recomendada para implantar aplicações Next.js.
+*   **Use um CDN para ativos estáticos:** Use um CDN para servir ativos estáticos de uma localização geograficamente próxima ao usuário.
+*   **Configure cache:** Configure cache para melhorar desempenho e reduzir carga do servidor.
+*   **Monitore saúde da aplicação:** Monitore saúde da aplicação para detectar e resolver problemas rapidamente.
+
+## 8. Interação com o Boilerplate
+
+### Comandos de Interação
+
+Para facilitar a interação com o projeto, utilize os comandos prefixados com `!`:
+
+- `!read [arquivo]` - Lê o conteúdo de um arquivo específico
+- `!task list` - Lista todas as tarefas do projeto
+- `!task start [número]` - Inicia uma nova tarefa do backlog
+- `!task update [número]` - Atualiza o progresso de uma tarefa em andamento
+- `!task complete [número]` - Marca uma tarefa como concluída
+- `!create feature [nome]` - Cria uma nova feature
+- `!create component [tipo] [nome]` - Cria um novo componente
+
+### Gerenciamento de Tarefas
+
+O boilerplate inclui um sistema de gerenciamento de tarefas que segue um fluxo de trabalho padronizado:
+
+1. **Backlog**: Tarefas planejadas para o futuro
+2. **In-progress**: Tarefas em andamento
+3. **Completed**: Tarefas concluídas
+
+As tarefas são organizadas por feature e seguem um formato de nomenclatura padronizado: `[número]-[nome-da-tarefa]`.
+
+### Estado do Projeto
+
+O arquivo `state.md` mantém uma referência atualizada sobre:
+
+- Features ativas e seu status
+- Tarefas no backlog
+- Tarefas em andamento
+- Tarefas concluídas
+- Próximos passos do projeto
+
+Este sistema permite uma visão clara e organizada do progresso do projeto e facilita a coordenação do trabalho em equipe.

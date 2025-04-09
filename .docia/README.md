@@ -1,4 +1,4 @@
-# Guia de Organização e Estrutura - Next.js 15 Boilerplate
+# Guia de Organização e Estrutura - Next.js 15 Boilerplate IA Cursor
 
 ## Visão Geral
 
